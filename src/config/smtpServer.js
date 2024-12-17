@@ -5,6 +5,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 const server = new SMTPServer({
+  name: 'smtp.clothes2wear.com',
   allowInsecureAuth: true,
   authOptional: false,
 
