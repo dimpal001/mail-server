@@ -83,6 +83,6 @@ const server = new SMTPServer({
   },
 })
 
-server.listen(25, () => {
-  console.log('Server is running on port 25')
+server.listen(995, () => {
+  console.log('Server is running on port 995')
 })
