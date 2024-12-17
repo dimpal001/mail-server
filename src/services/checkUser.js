@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
@@ -14,4 +14,5 @@ const checkUser = async (email) => {
   }
 }
 
-export default checkUser
+// CommonJS export
+module.exports = checkUser
