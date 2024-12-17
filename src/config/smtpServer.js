@@ -23,6 +23,6 @@ const server = new SMTPServer({
   },
 })
 
-server.listen(25, () => console.log('SMTP Server running on port 25'))
+server.listen(587, () => console.log('SMTP Server running on port 25'))
 
 module.exports = server
