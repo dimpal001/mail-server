@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client')
-const { default: checkUser } = require('./src/services/checkUser')
+const checkUser = require('./src/services/checkUser')
 
 const SMTPServer = require('smtp-server').SMTPServer
 
@@ -83,6 +83,6 @@ const server = new SMTPServer({
   },
 })
 
-server.listen(465, () => {
-  console.log('Server is running on port 465')
+server.listen(25, () => {
+  console.log('Server is running on port 25')
 })
