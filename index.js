@@ -5,39 +5,47 @@ const fs = require('fs')
 
 const prisma = new PrismaClient()
 
+// POP3 Server (Port 995) - Handles Authentication and Email Retrieval
 const pop3Server = new SMTPServer({
   secure: true,
-  key: fs.readFileSync('./private.key'),
-  cert: fs.readFileSync('./server.crt'),
-  authOptional: true,
+  key: fs.readFileSync('./private.key'), // SSL Key
+  cert: fs.readFileSync('./server.crt'), // SSL Certificate
+  authOptional: false, // Authentication required
 
   onConnect(session, cb) {
     console.log('POP3 Connection established on port 995')
-    cb()
+    cb() // Allow connection
   },
 
-  onData(stream, session, cb) {
-    console.log('Receiving email on port 995...')
-    cb()
-  },
-})
-
-const smtpServer = new SMTPServer({
-  secure: false,
-  authOptional: false,
   onAuth(auth, session, callback) {
+    // Validate user credentials for POP3
     if (
       auth.username === 'admin@clothes2wear.com' &&
       auth.password === '123456'
     ) {
+      console.log('POP3 Authentication successful:', auth.username)
       callback(null, { user: auth.username })
     } else {
+      console.log('POP3 Authentication failed for:', auth.username)
       callback(new Error('Invalid username or password'))
     }
   },
 
+  onData(stream, session, cb) {
+    console.log('Receiving email on port 995...')
+    cb() // Acknowledge email retrieval (no action taken in POP3 mode)
+  },
+})
+
+// SMTP Server (Port 25) - Handles Sending Emails
+const smtpServer = new SMTPServer({
+  secure: false, // SMTP does not require SSL on port 25 (STARTTLS can be used if needed)
+  authOptional: true, // Allow sending without authentication
+
   onMailFrom(address, session, cb) {
-    console.log('SMTP Mail From: ', address.address)
+    console.log('SMTP Mail From:', address.address)
+
+    // Validate sender email
     checkUser(address.address)
       .then((isValid) => {
         if (isValid) {
@@ -48,14 +56,14 @@ const smtpServer = new SMTPServer({
         }
       })
       .catch((err) => {
-        console.error('Error during Mail From: ', err)
+        console.error('Error during SMTP Mail From:', err)
         cb(new Error('Internal server error'))
       })
   },
 
   onRcptTo(address, session, cb) {
-    console.log('SMTP Recipient: ', address.address)
-    cb()
+    console.log('SMTP Recipient:', address.address)
+    cb() // Accept recipient
   },
 
   onData(stream, session, cb) {
@@ -70,27 +78,30 @@ const smtpServer = new SMTPServer({
 
       try {
         if (session.userEmail) {
+          // Store the email content in the database
           await prisma.message.create({
             data: {
               email: session.userEmail,
               content: message,
             },
           })
-          console.log('Message stored successfully on port 25')
+          console.log('SMTP Message stored successfully in the database')
         }
       } catch (err) {
-        console.error('Error storing SMTP message: ', err)
+        console.error('Error storing SMTP message:', err)
       }
 
-      cb()
+      cb() // Acknowledge email receipt
     })
   },
 })
 
+// Start POP3 Server (Port 995)
 pop3Server.listen(995, () => {
   console.log('POP3 Server is running on port 995')
 })
 
+// Start SMTP Server (Port 25)
 smtpServer.listen(25, () => {
   console.log('SMTP Server is running on port 25')
 })
